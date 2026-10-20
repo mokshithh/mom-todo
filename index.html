@@ -16,11 +16,12 @@
 @media (prefers-color-scheme:dark){:root{--bg:#171c1a;--card:#212825;--ink:#eef2ee;--muted:#9aa8a0;--accent:#5fb89c;--accent-ink:#0e1713;--line:#33403a;--danger:#e8806f}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:20px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:max(16px,env(safe-area-inset-top)) 16px calc(130px + env(safe-area-inset-bottom))}
+body{background:var(--bg);color:var(--ink);font:20px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Telugu","Nirmala UI",sans-serif;min-height:100vh;padding:max(16px,env(safe-area-inset-top)) 16px calc(130px + env(safe-area-inset-bottom))}
 main{max-width:640px;margin:0 auto}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:8px 0 18px}
-h1{font-size:32px;margin:0}
-#count{color:var(--muted);font-size:18px}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:8px 0 18px}
+h1{font-size:32px;line-height:1.2;margin:0}
+#count{color:var(--muted);font-size:18px;min-height:26px}
+#lang{flex:none;font:inherit;font-size:18px;font-weight:700;color:var(--accent);background:var(--card);border:2px solid var(--accent);border-radius:999px;padding:8px 16px;min-height:48px;cursor:pointer}
 h2{font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:26px 4px 10px;display:flex;justify-content:space-between;align-items:center}
 h2[hidden]{display:none}
 ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
@@ -30,7 +31,7 @@ li.done .txt{text-decoration:line-through;color:var(--muted)}
 .chk span{width:34px;height:34px;border:3px solid var(--accent);border-radius:50%;display:grid;place-items:center;color:var(--accent-ink);font-size:22px;font-weight:700;transition:background .15s}
 li.done .chk span{background:var(--accent)}
 li.done .chk span::after{content:"✓"}
-.txt{flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:10px 4px;text-align:left;border-radius:8px}
+.txt{flex:1;min-width:0;background:none;border:0;color:inherit;font:inherit;padding:10px 4px;text-align:left;border-radius:8px;resize:none;overflow:hidden;display:block;height:auto}
 .txt:focus{outline:3px solid var(--accent)}
 .del{flex:none;width:52px;height:52px;border:0;background:none;color:var(--muted);font-size:26px;cursor:pointer;border-radius:50%}
 .del:active{color:var(--danger)}
@@ -40,71 +41,190 @@ form{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px 
 .row{max-width:640px;margin:0 auto;display:flex;gap:10px}
 #in{flex:1;min-width:0;font:inherit;padding:16px;border:2px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink)}
 #in:focus{outline:none;border-color:var(--accent)}
-#add{flex:none;font:inherit;font-weight:700;padding:0 24px;border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+#add{flex:none;font:inherit;font-weight:700;padding:0 20px;border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
 #add:active{transform:scale(.97)}
-#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;display:none;gap:14px;align-items:center;font-size:18px;z-index:5}
+#mic{flex:none;width:60px;border:2px solid var(--accent);border-radius:16px;background:var(--card);color:var(--accent);font-size:28px;cursor:pointer}
+#mic.on{background:var(--danger);border-color:var(--danger);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(179,64,47,.25)}}
+#live{position:fixed;left:16px;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));max-width:608px;margin:0 auto;background:var(--card);border:2px solid var(--danger);border-radius:16px;padding:14px 16px;display:none;z-index:4;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+#live.show{display:block}
+#liveHead{font-weight:700;color:var(--danger)}
+#liveText{margin-top:6px;min-height:28px;overflow-wrap:anywhere}
+#liveHint{color:var(--muted);font-size:16px;margin-top:6px}
+#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;display:none;gap:14px;align-items:center;font-size:18px;z-index:5;width:max-content;max-width:calc(100vw - 32px)}
 #toast.show{display:flex}
-#toast button{background:none;border:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+#toast button{white-space:nowrap;background:none;border:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
 <main>
-  <header><h1>My To-Do List</h1><span id="count"></span></header>
-  <ul id="todo" aria-label="Things to do"></ul>
-  <h2 id="doneHead" hidden><span>Done</span><button id="clear" type="button">Clear done</button></h2>
-  <ul id="done" aria-label="Finished things"></ul>
+  <header>
+    <div><h1 data-i18n="title"></h1><div id="count"></div></div>
+    <button id="lang" type="button"></button>
+  </header>
+  <ul id="todo"></ul>
+  <h2 id="doneHead" hidden><span data-i18n="done"></span><button id="clear" type="button" data-i18n="clear"></button></h2>
+  <ul id="done"></ul>
 </main>
+<div id="live" role="status"><div id="liveHead"></div><div id="liveText"></div><div id="liveHint"></div></div>
 <form id="f" autocomplete="off">
   <div class="row">
-    <input id="in" placeholder="Add a new task…" enterkeyhint="done" aria-label="New task" maxlength="200">
-    <button id="add" type="submit">Add</button>
+    <input id="in" enterkeyhint="done" maxlength="200" data-i18n-ph="ph" data-i18n-aria="ph">
+    <button id="mic" type="button" data-i18n-aria="mic">🎤</button>
+    <button id="add" type="submit" data-i18n="add"></button>
   </div>
 </form>
-<div id="toast" role="status"><span id="toastMsg"></span><button id="undo" type="button">Undo</button></div>
+<div id="toast" role="status"><span id="toastMsg"></span><button id="undo" type="button" data-i18n="undo"></button></div>
 <script>
 (function(){
-  var KEY="mom-todo-v1", tasks=[], lastDeleted=null, toastTimer;
+  var STR={
+    en:{title:"My To-Do List",ph:"Add a new task…",add:"Add",done:"Done",clear:"Clear done",undo:"Undo",
+      count:"{n} to do",empty:"Nothing to do yet. Add a task below.",allDone:"All done! 🎉",
+      deleted:"Task deleted",confirmClear:"Remove all finished tasks?",
+      markDone:"Mark done: ",markUndone:"Mark not done: ",del:"Delete: ",taskText:"Task text",
+      mic:"Speak your tasks",langBtn:"తెలుగు",
+      listening:"🎤 Listening… speak your tasks",liveHint:"Tap the red mic when you are finished",
+      added:"{n} task(s) added",nothing:"Didn't hear anything. Try again.",
+      noVoice:"Voice isn't available on this phone. Use the 🎤 on your keyboard instead.",
+      denied:"Please allow the microphone, then try again.",
+      netErr:"Voice needs internet. Try again when online."},
+    te:{title:"నా పనుల జాబితా",ph:"కొత్త పని…",add:"జోడించు",done:"పూర్తయినవి",clear:"పూర్తయినవి తొలగించు",undo:"రద్దు చేయి",
+      count:"{n} పనులు చేయాలి",empty:"ఇంకా పనులు లేవు. కింద ఒక పని జోడించండి.",allDone:"అన్నీ పూర్తయ్యాయి! 🎉",
+      deleted:"పని తొలగించబడింది",confirmClear:"పూర్తయిన పనులన్నీ తొలగించాలా?",
+      markDone:"పూర్తయింది అని గుర్తించండి: ",markUndone:"ఇంకా పూర్తి కాలేదు అని గుర్తించండి: ",del:"తొలగించు: ",taskText:"పని వివరం",
+      mic:"మీ పనులు చెప్పండి",langBtn:"English",
+      listening:"🎤 వింటున్నాను… మీ పనులు చెప్పండి",liveHint:"పూర్తయ్యాక ఎర్ర మైక్ నొక్కండి",
+      added:"{n} పనులు జోడించబడ్డాయి",nothing:"ఏమీ వినిపించలేదు. మళ్లీ ప్రయత్నించండి.",
+      noVoice:"ఈ ఫోన్‌లో వాయిస్ పనిచేయదు. బదులుగా కీబోర్డ్‌లోని 🎤 వాడండి.",
+      denied:"దయచేసి మైక్రోఫోన్ అనుమతి ఇచ్చి, మళ్లీ ప్రయత్నించండి.",
+      netErr:"వాయిస్‌కు ఇంటర్నెట్ కావాలి. ఆన్‌లైన్‌లో ఉన్నప్పుడు ప్రయత్నించండి."}
+  };
+  var KEY="mom-todo-v1", LKEY="mom-todo-lang", tasks=[], lang="en", lastUndo=null, toastTimer;
   try{tasks=JSON.parse(localStorage.getItem(KEY))||[]}catch(e){tasks=[]}
+  try{lang=localStorage.getItem(LKEY)||((navigator.language||"").indexOf("te")===0?"te":"en")}catch(e){}
+  if(!STR[lang]) lang="en";
   var $=function(id){return document.getElementById(id)};
+  function t(k,n){var s=STR[lang][k]; return n==null?s:s.replace("{n}",n)}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(tasks))}catch(e){}}
   function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-  function toast(msg){
-    $("toastMsg").textContent=msg;
+
+  function toast(msg,undo){
+    $("toastMsg").textContent=msg; lastUndo=undo||null; $("undo").style.display=undo?"":"none";
     $("toast").classList.add("show"); clearTimeout(toastTimer);
-    toastTimer=setTimeout(function(){$("toast").classList.remove("show");lastDeleted=null},5000);
+    toastTimer=setTimeout(function(){$("toast").classList.remove("show");lastUndo=null},6000);
   }
-  function item(t){
-    var li=document.createElement("li"); if(t.done) li.className="done";
+  $("undo").onclick=function(){var u=lastUndo; lastUndo=null; $("toast").classList.remove("show"); if(u)u()};
+
+  function item(k){
+    var li=document.createElement("li"); if(k.done) li.className="done";
     var c=document.createElement("button"); c.className="chk"; c.type="button";
-    c.setAttribute("aria-label",(t.done?"Mark not done: ":"Mark done: ")+t.text);
-    c.innerHTML="<span></span>"; c.onclick=function(){t.done=!t.done;t.at=Date.now();save();render()};
-    var x=document.createElement("input"); x.className="txt"; x.value=t.text; x.setAttribute("aria-label","Task text"); x.maxLength=200;
-    x.onchange=function(){var v=x.value.trim(); if(v){t.text=v;save()} else x.value=t.text};
+    c.setAttribute("aria-label",(k.done?t("markUndone"):t("markDone"))+k.text);
+    c.innerHTML="<span></span>"; c.onclick=function(){k.done=!k.done;k.at=Date.now();save();render()};
+    var x=document.createElement("textarea"); x.rows=1; x.className="txt"; x.value=k.text; x.oninput=function(){fit(x)}; x.setAttribute("aria-label",t("taskText")); x.maxLength=200;
+    x.onchange=function(){var v=x.value.trim(); if(v){k.text=v;save()} else x.value=k.text};
     x.onkeydown=function(e){if(e.key==="Enter")x.blur()};
-    var d=document.createElement("button"); d.className="del"; d.type="button"; d.textContent="🗑"; d.setAttribute("aria-label","Delete: "+t.text);
-    d.onclick=function(){lastDeleted={t:t,i:tasks.indexOf(t)};tasks=tasks.filter(function(y){return y!==t});save();render();toast("Task deleted")};
+    var d=document.createElement("button"); d.className="del"; d.type="button"; d.textContent="🗑"; d.setAttribute("aria-label",t("del")+k.text);
+    d.onclick=function(){
+      var i=tasks.indexOf(k); tasks=tasks.filter(function(y){return y!==k}); save(); render();
+      toast(t("deleted"),function(){tasks.splice(Math.min(i,tasks.length),0,k);save();render()});
+    };
     li.append(c,x,d); return li;
   }
+  function fit(x){x.style.height="auto";x.style.height=x.scrollHeight+"px"}
   function render(){
-    var open=tasks.filter(function(t){return !t.done}), done=tasks.filter(function(t){return t.done}).sort(function(a,b){return b.at-a.at});
+    var open=tasks.filter(function(k){return !k.done}), done=tasks.filter(function(k){return k.done}).sort(function(a,b){return b.at-a.at});
     var a=$("todo"), b=$("done"); a.textContent=""; b.textContent="";
-    if(!open.length){var e=document.createElement("li");e.className="empty";e.textContent=tasks.length?"All done! 🎉":"Nothing to do yet. Add a task below.";a.appendChild(e)}
-    open.forEach(function(t){a.appendChild(item(t))});
-    done.forEach(function(t){b.appendChild(item(t))});
+    if(!open.length){var e=document.createElement("li");e.className="empty";e.textContent=tasks.length?t("allDone"):t("empty");a.appendChild(e)}
+    open.forEach(function(k){a.appendChild(item(k))});
+    done.forEach(function(k){b.appendChild(item(k))});
     $("doneHead").hidden=!done.length;
-    $("count").textContent=open.length?open.length+" to do":"";
+    $("count").textContent=open.length?t("count",open.length):"";
+    document.querySelectorAll(".txt").forEach(fit);
+  }
+  function applyLang(){
+    document.documentElement.lang=lang; document.title=t("title");
+    document.querySelectorAll("[data-i18n]").forEach(function(el){el.textContent=t(el.getAttribute("data-i18n"))});
+    document.querySelectorAll("[data-i18n-ph]").forEach(function(el){el.placeholder=t(el.getAttribute("data-i18n-ph"))});
+    document.querySelectorAll("[data-i18n-aria]").forEach(function(el){el.setAttribute("aria-label",t(el.getAttribute("data-i18n-aria")))});
+    $("lang").textContent=t("langBtn"); $("lang").setAttribute("lang",lang==="te"?"en":"te");
+    $("liveHead").textContent=t("listening"); $("liveHint").textContent=t("liveHint");
+    render();
+  }
+  $("lang").onclick=function(){
+    if(listening) stopVoice();
+    lang=lang==="en"?"te":"en"; try{localStorage.setItem(LKEY,lang)}catch(e){} applyLang();
+  };
+
+  function addTasks(texts,withUndo){
+    var made=texts.map(function(s){return {id:uid(),text:s,done:false,at:Date.now()}});
+    if(!made.length) return;
+    tasks=tasks.concat(made); save(); render();
+    if(withUndo) toast(t("added",made.length),function(){
+      tasks=tasks.filter(function(k){return made.indexOf(k)<0}); save(); render();
+    });
   }
   $("f").onsubmit=function(e){
     e.preventDefault(); var v=$("in").value.trim(); if(!v)return;
-    tasks.push({id:uid(),text:v,done:false,at:Date.now()}); $("in").value=""; save(); render(); $("in").focus();
+    addTasks([v]); $("in").value=""; $("in").focus();
   };
-  $("undo").onclick=function(){if(lastDeleted){tasks.splice(Math.min(lastDeleted.i,tasks.length),0,lastDeleted.t);lastDeleted=null;save();render()}$("toast").classList.remove("show")};
   $("clear").onclick=function(){
-    if(!tasks.some(function(t){return t.done}))return;
-    if(!confirm("Remove all finished tasks?"))return;
-    tasks=tasks.filter(function(t){return !t.done}); save(); render();
+    if(!tasks.some(function(k){return k.done}))return;
+    if(!confirm(t("confirmClear")))return;
+    tasks=tasks.filter(function(k){return !k.done}); save(); render();
   };
-  render();
+
+  /* ---- Voice ---- */
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, rec=null, listening=false, finals=[], interim="", voiceErr="";
+  var SPLIT=/\s*(?:[,.;।]|\b(?:and then|and also|then|also|and)\b|మరియు|ఆ తర్వాత|తర్వాత|ఇంకా)\s*/i;
+  var LEAD=/^(?:please\s+)?(?:add|remind me to|i need to|i have to|i must)\s+/i;
+  function parse(chunks){
+    var out=[];
+    chunks.forEach(function(c){
+      c.split(SPLIT).forEach(function(p){
+        p=p.trim().replace(LEAD,"").trim();
+        if(p.length>1) out.push(p.charAt(0).toUpperCase()+p.slice(1));
+      });
+    });
+    return out;
+  }
+  function showLive(){
+    $("liveText").textContent=finals.concat(interim?[interim]:[]).join(" · ");
+  }
+  function setListening(on){
+    listening=on; $("mic").classList.toggle("on",on); $("live").classList.toggle("show",on);
+    $("mic").setAttribute("aria-pressed",on?"true":"false");
+    if(on){$("liveText").textContent="";$("toast").classList.remove("show")}
+  }
+  function startVoice(){
+    if(!SR){toast(t("noVoice"));return}
+    voiceErr=""; finals=[]; interim="";
+    try{
+      rec=new SR(); rec.lang=lang==="te"?"te-IN":"en-IN"; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=1;
+      rec.onresult=function(e){
+        interim="";
+        for(var i=e.resultIndex;i<e.results.length;i++){
+          var r=e.results[i];
+          if(r.isFinal){var s=r[0].transcript.trim(); if(s) finals.push(s)} else interim+=r[0].transcript;
+        }
+        showLive();
+      };
+      rec.onerror=function(e){voiceErr=e.error||"error"};
+      rec.onend=function(){
+        var chunks=finals.concat(interim.trim()?[interim.trim()]:[]), list=parse(chunks);
+        setListening(false); rec=null; interim=""; finals=[];
+        if(list.length){addTasks(list,true)}
+        else if(voiceErr==="not-allowed"||voiceErr==="service-not-allowed"){toast(t(SR&&voiceErr==="service-not-allowed"?"noVoice":"denied"))}
+        else if(voiceErr==="network"){toast(t("netErr"))}
+        else if(voiceErr==="audio-capture"){toast(t("denied"))}
+        else toast(t("nothing"));
+      };
+      rec.start(); setListening(true);
+    }catch(err){setListening(false);rec=null;toast(t("noVoice"))}
+  }
+  function stopVoice(){if(rec){try{rec.stop()}catch(e){}}}
+  $("mic").onclick=function(){listening?stopVoice():startVoice()};
+
+  applyLang();
   if("serviceWorker" in navigator) addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
 })();
 </script>
