@@ -174,54 +174,77 @@ form{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px 
   };
 
   /* ---- Voice ---- */
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, rec=null, listening=false, finals=[], interim="", voiceErr="";
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, rec=null, listening=false, stopping=false;
+  var current=[], banked=[], restarts=0, voiceErr="";
+  var FATAL={"not-allowed":1,"service-not-allowed":1,"audio-capture":1,"network":1,"language-not-supported":1};
   var SPLIT=/\s*(?:[,.;।]|\b(?:and then|and also|then|also|and)\b|మరియు|ఆ తర్వాత|తర్వాత|ఇంకా)\s*/i;
   var LEAD=/^(?:please\s+)?(?:add|remind me to|i need to|i have to|i must)\s+/i;
-  function parse(chunks){
+  function norm(s){return s.toLowerCase().replace(/\s+/g," ").trim()}
+  // Android/Chrome re-sends the same words as growing or repeated results; merge those into one.
+  function collapse(list){
     var out=[];
+    list.forEach(function(raw){
+      var s=raw.trim(); if(!s) return;
+      var last=out[out.length-1];
+      if(last){
+        var a=norm(last), b=norm(s);
+        if(b.indexOf(a)===0){out[out.length-1]=s; return}
+        if(a.indexOf(b)===0) return;
+      }
+      out.push(s);
+    });
+    return out;
+  }
+  function allChunks(){return banked.concat(collapse(current))}
+  function parse(chunks){
+    var out=[], seen={};
     chunks.forEach(function(c){
       c.split(SPLIT).forEach(function(p){
         p=p.trim().replace(LEAD,"").trim();
-        if(p.length>1) out.push(p.charAt(0).toUpperCase()+p.slice(1));
+        if(p.length<2||seen[norm(p)]) return;
+        seen[norm(p)]=1; out.push(p.charAt(0).toUpperCase()+p.slice(1));
       });
     });
     return out;
   }
-  function showLive(){
-    $("liveText").textContent=finals.concat(interim?[interim]:[]).join(" · ");
-  }
+  function showLive(){$("liveText").textContent=allChunks().join(" · ")}
   function setListening(on){
     listening=on; $("mic").classList.toggle("on",on); $("live").classList.toggle("show",on);
     $("mic").setAttribute("aria-pressed",on?"true":"false");
     if(on){$("liveText").textContent="";$("toast").classList.remove("show")}
   }
+  function finish(){
+    var list=parse(allChunks()), err=voiceErr;
+    setListening(false); rec=null; current=[]; banked=[];
+    if(list.length){addTasks(list,true)}
+    else if(err==="service-not-allowed"){toast(t("noVoice"))}
+    else if(err==="not-allowed"||err==="audio-capture"){toast(t("denied"))}
+    else if(err==="network"){toast(t("netErr"))}
+    else toast(t("nothing"));
+  }
   function startVoice(){
     if(!SR){toast(t("noVoice"));return}
-    voiceErr=""; finals=[]; interim="";
+    voiceErr=""; current=[]; banked=[]; restarts=0; stopping=false;
     try{
       rec=new SR(); rec.lang=lang==="te"?"te-IN":"en-IN"; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=1;
       rec.onresult=function(e){
-        interim="";
-        for(var i=e.resultIndex;i<e.results.length;i++){
-          var r=e.results[i];
-          if(r.isFinal){var s=r[0].transcript.trim(); if(s) finals.push(s)} else interim+=r[0].transcript;
-        }
+        current=[];
+        for(var i=0;i<e.results.length;i++){current.push(e.results[i][0].transcript)}
         showLive();
       };
       rec.onerror=function(e){voiceErr=e.error||"error"};
       rec.onend=function(){
-        var chunks=finals.concat(interim.trim()?[interim.trim()]:[]), list=parse(chunks);
-        setListening(false); rec=null; interim=""; finals=[];
-        if(list.length){addTasks(list,true)}
-        else if(voiceErr==="not-allowed"||voiceErr==="service-not-allowed"){toast(t(SR&&voiceErr==="service-not-allowed"?"noVoice":"denied"))}
-        else if(voiceErr==="network"){toast(t("netErr"))}
-        else if(voiceErr==="audio-capture"){toast(t("denied"))}
-        else toast(t("nothing"));
+        var quiet=voiceErr==="no-speech"&&restarts>=2&&!banked.length&&!current.length;
+        if(!stopping&&!FATAL[voiceErr]&&!quiet&&restarts<20){
+          banked=allChunks(); current=[]; voiceErr=""; restarts++;
+          try{rec.start();return}catch(err){}
+        }
+        finish();
       };
       rec.start(); setListening(true);
     }catch(err){setListening(false);rec=null;toast(t("noVoice"))}
   }
-  function stopVoice(){if(rec){try{rec.stop()}catch(e){}}}
+  function stopVoice(){stopping=true; if(rec){try{rec.stop()}catch(e){finish()}}}
   $("mic").onclick=function(){listening?stopVoice():startVoice()};
 
   applyLang();
